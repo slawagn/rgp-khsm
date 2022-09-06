@@ -63,3 +63,17 @@ end
 # Это нужно, чтобы капибара искала стили и js в правильном месте
 Capybara.asset_host = "http://localhost:3000"
 
+if RUBY_VERSION>='2.6.0'
+  if Rails.version < '5'
+    class ActionController::TestResponse < ActionDispatch::TestResponse
+      def recycle!
+        # hack to avoid MonitorMixin double-initialize error:
+        @mon_mutex_owner_object_id = nil
+        @mon_mutex = nil
+        initialize
+      end
+    end
+  else
+    puts "Monkeypatch for ActionController::TestResponse no longer needed"
+  end
+end

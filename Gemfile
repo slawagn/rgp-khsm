@@ -35,3 +35,6 @@ group :production do
   gem 'rails_12factor'
   gem 'pg'
 end
+
+gem "guard", "~> 2.18"
+gem "guard-rspec", "~> 4.7"
