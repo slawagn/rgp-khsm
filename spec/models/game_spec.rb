@@ -138,4 +138,67 @@ RSpec.describe Game, type: :model do
       expect(game_w_questions.previous_level).to eq(game_w_questions.current_level - 1)
     end
   end
+
+  describe '#answer_current_question!' do
+    def give_incorrect_answer
+      game_w_questions.answer_current_question!(incorrect_answer_key)
+    end
+
+    def give_correct_answer
+      game_w_questions.answer_current_question!(correct_answer_key)
+    end
+
+    let(:incorrect_answer_key) do
+      (
+        current_question.variants.keys -
+        [current_question.correct_answer_key]
+      ).first
+    end
+    let(:correct_answer_key) { current_question.correct_answer_key }
+    let(:current_question) { game_w_questions.current_game_question }
+
+    context 'when an incorrect answer is given' do
+      it 'finishes the game with failure' do
+        give_incorrect_answer
+
+        expect(game_w_questions.finished?).to be_truthy
+        expect(game_w_questions.status).to eq(:fail)
+      end
+    end
+
+    context 'when the timeout is reached' do
+      it 'returns false and finishes the game' do
+        game_w_questions.created_at = Time.now - Game::TIME_LIMIT
+
+        return_value = give_correct_answer
+
+        expect(return_value).to be_falsey
+        expect(game_w_questions.finished?).to be_truthy
+        expect(game_w_questions.status).to eq(:timeout)
+      end
+    end
+
+    context 'when the last question is answered correctly' do
+      it 'finishes the game as won' do
+        game_w_questions.current_level = Question::QUESTION_LEVELS.max
+
+        give_correct_answer
+
+        expect(game_w_questions.finished?).to be_truthy
+        expect(game_w_questions.status).to eq(:won)
+      end
+    end
+
+    context 'when a question is answered correctly' do
+      it 'increases level by 1' do
+        initial_level = game_w_questions.current_level
+
+        give_correct_answer
+
+        expect(game_w_questions.finished?).to be_falsey
+        expect(game_w_questions.previous_level).to eq(initial_level)
+        expect(game_w_questions.status).to eq(:in_progress)
+      end
+    end
+  end
 end
