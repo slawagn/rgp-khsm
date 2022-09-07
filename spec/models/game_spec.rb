@@ -124,4 +124,18 @@ RSpec.describe Game, type: :model do
       end
     end
   end
+
+  describe '#current_game_question' do
+    let(:question) { game_w_questions.current_game_question }
+
+    it 'should return question of corresponding level' do
+      expect(question.level).to eq(game_w_questions.current_level)
+    end
+  end
+
+  describe '#previous_level' do
+    it 'should return previous level' do
+      expect(game_w_questions.previous_level).to eq(game_w_questions.current_level - 1)
+    end
+  end
 end
