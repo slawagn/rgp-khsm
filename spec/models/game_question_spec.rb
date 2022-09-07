@@ -52,4 +52,22 @@ RSpec.describe GameQuestion, type: :model do
       expect(game_question.level).to eq(game_question.question.level)
     end
   end
+
+  describe '#correct_answer_key' do
+    context 'when value of 1 corresponds to key b' do
+      it 'should return character b' do
+        expect(game_question.correct_answer_key).to eq('b')
+      end
+    end
+
+    context 'when value of 1 corresponds to key c' do
+      let(:game_question_with_c_anwer) do
+        FactoryGirl.create(:game_question, a: 2, b: 4, c: 1, d: 3)
+      end
+
+      it 'should return character c' do
+        expect(game_question_with_c_anwer.correct_answer_key).to eq('c')
+      end
+    end
+  end
 end
