@@ -126,10 +126,15 @@ RSpec.describe Game, type: :model do
   end
 
   describe '#current_game_question' do
-    let(:question) { game_w_questions.current_game_question }
+    let(:current_game_question) { game_w_questions.current_game_question }
+    let(:game_questions_of_current_level) do
+      GameQuestion
+        .joins(:question)
+        .where(questions: { level: game_w_questions.current_level })
+    end
 
     it 'returns question of corresponding level' do
-      expect(question.level).to eq(game_w_questions.current_level)
+      expect(game_questions_of_current_level).to include(current_game_question)
     end
   end
 
