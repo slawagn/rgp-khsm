@@ -61,4 +61,67 @@ RSpec.describe Game, type: :model do
       expect(game_w_questions.finished?).to be_falsey
     end
   end
+
+  describe '#take_money!' do
+    context 'when the first question has been answered correctly' do
+      it 'finishes game with appropriate score' do
+        game_w_questions.answer_current_question!(
+          game_w_questions.current_game_question.correct_answer_key
+        )
+        expect(game_w_questions.status).to eq(:in_progress)
+
+        game_w_questions.take_money!
+        expect(game_w_questions.status).to eq(:money)
+        expect(game_w_questions.finished?).to be_truthy
+        expect(game_w_questions.prize).to eq(Game::PRIZES.first)
+
+        expect(user.balance).to eq(Game::PRIZES.first)
+      end
+    end
+  end
+
+  describe '#status' do
+    subject { game_w_questions.status }
+
+    before(:each) do |test|
+      unless test.metadata[:unfinished_game]
+        game_w_questions.finished_at = Time.now
+        expect(game_w_questions.finished?).to be_truthy
+      end
+    end
+
+    context 'when the game is not finished' do
+      it 'should be :in_progress', :unfinished_game do
+        is_expected.to eq(:in_progress)
+      end
+    end
+
+    context 'when the game is lost' do
+      it 'should be :fail' do
+        game_w_questions.is_failed = true
+        is_expected.to eq(:fail)
+      end
+    end
+
+    context 'when a timeout has been reached' do
+      it 'should be :timeout' do
+        game_w_questions.finished_at += Game::TIME_LIMIT
+        game_w_questions.is_failed = true
+        is_expected.to eq(:timeout)
+      end
+    end
+
+    context 'when the game has been won' do
+      it 'should be :won' do
+        game_w_questions.current_level = Question::QUESTION_LEVELS.max + 1
+        is_expected.to eq(:won)
+      end
+    end
+
+    context 'when money has been taken' do
+      it 'should be :money' do
+        is_expected.to eq(:money)
+      end
+    end
+  end
 end

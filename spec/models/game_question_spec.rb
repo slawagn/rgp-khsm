@@ -5,7 +5,6 @@ require 'rails_helper'
 # Тестовый сценарий для модели игрового вопроса,
 # в идеале весь наш функционал (все методы) должны быть протестированы.
 RSpec.describe GameQuestion, type: :model do
-
   # задаем локальную переменную game_question, доступную во всех тестах этого сценария
   # она будет создана на фабрике заново для каждого блока it, где она вызывается
   let(:game_question) { FactoryGirl.create(:game_question, a: 2, b: 1, c: 4, d: 3) }
@@ -44,6 +43,13 @@ RSpec.describe GameQuestion, type: :model do
 
       ah = game_question.help_hash[:audience_help]
       expect(ah.keys).to contain_exactly('a', 'b', 'c', 'd')
+    end
+  end
+
+  context 'delegated methods' do
+    it 'delegates .text and .level to Question model' do
+      expect(game_question.text).to  eq(game_question.question.text)
+      expect(game_question.level).to eq(game_question.question.level)
     end
   end
 end
