@@ -91,20 +91,20 @@ RSpec.describe Game, type: :model do
     end
 
     context 'when the game is not finished' do
-      it 'should be :in_progress', :unfinished_game do
+      it 'returns :in_progress', :unfinished_game do
         is_expected.to eq(:in_progress)
       end
     end
 
     context 'when the game is lost' do
-      it 'should be :fail' do
+      it 'returns :fail' do
         game_w_questions.is_failed = true
         is_expected.to eq(:fail)
       end
     end
 
     context 'when a timeout has been reached' do
-      it 'should be :timeout' do
+      it 'returns :timeout' do
         game_w_questions.finished_at += Game::TIME_LIMIT
         game_w_questions.is_failed = true
         is_expected.to eq(:timeout)
@@ -112,14 +112,14 @@ RSpec.describe Game, type: :model do
     end
 
     context 'when the game has been won' do
-      it 'should be :won' do
+      it 'returns :won' do
         game_w_questions.current_level = Question::QUESTION_LEVELS.max + 1
         is_expected.to eq(:won)
       end
     end
 
     context 'when money has been taken' do
-      it 'should be :money' do
+      it 'returns :money' do
         is_expected.to eq(:money)
       end
     end
@@ -128,13 +128,13 @@ RSpec.describe Game, type: :model do
   describe '#current_game_question' do
     let(:question) { game_w_questions.current_game_question }
 
-    it 'should return question of corresponding level' do
+    it 'returns question of corresponding level' do
       expect(question.level).to eq(game_w_questions.current_level)
     end
   end
 
   describe '#previous_level' do
-    it 'should return previous level' do
+    it 'returns previous level' do
       expect(game_w_questions.previous_level).to eq(game_w_questions.current_level - 1)
     end
   end

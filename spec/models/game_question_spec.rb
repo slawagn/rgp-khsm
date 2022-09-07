@@ -55,7 +55,7 @@ RSpec.describe GameQuestion, type: :model do
 
   describe '#correct_answer_key' do
     context 'when value of 1 corresponds to key b' do
-      it 'should return character b' do
+      it 'returns character b' do
         expect(game_question.correct_answer_key).to eq('b')
       end
     end
@@ -65,7 +65,7 @@ RSpec.describe GameQuestion, type: :model do
         FactoryGirl.create(:game_question, a: 2, b: 4, c: 1, d: 3)
       end
 
-      it 'should return character c' do
+      it 'returns character c' do
         expect(game_question_with_c_anwer.correct_answer_key).to eq('c')
       end
     end
