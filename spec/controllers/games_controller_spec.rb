@@ -18,15 +18,63 @@ RSpec.describe GamesController, type: :controller do
   let(:game_w_questions) { FactoryGirl.create(:game_with_questions, user: user) }
 
   # группа тестов для незалогиненного юзера (Анонимус)
-  context 'Anon' do
-    # из экшена show анона посылаем
-    it 'kick from #show' do
-      # вызываем экшен
-      get :show, id: game_w_questions.id
-      # проверяем ответ
+  context 'Anonymous user' do
+    def expect_redirect_to_login
       expect(response.status).not_to eq(200) # статус не 200 ОК
       expect(response).to redirect_to(new_user_session_path) # devise должен отправить на логин
       expect(flash[:alert]).to be # во flash должен быть прописана ошибка
+    end
+
+    def expect_game_to_be_nil
+      game = assigns(:game)
+      expect(game).to be_nil
+    end
+
+    # из экшена show анона посылаем
+    it "can't access #show" do
+      # вызываем экшен
+      get :show, id: game_w_questions.id
+      # проверяем ответ
+      expect_redirect_to_login
+    end
+
+    it "can't create game" do
+      post :create
+
+      expect_game_to_be_nil
+      expect_redirect_to_login
+    end
+
+    it "can't give an answer" do
+      put :answer,
+        id:     game_w_questions.id,
+        letter: game_w_questions.current_game_question.correct_answer_key
+
+      expect(game_w_questions.current_level).to be(0)
+
+      expect_game_to_be_nil
+      expect_redirect_to_login
+    end
+
+    it "can't take money" do
+      game_w_questions.update(current_level: 2)
+      put :take_money, id: game_w_questions.id
+
+      expect(game_w_questions.finished?).to be_falsey
+
+      expect_game_to_be_nil
+      expect_redirect_to_login
+    end
+
+    it "can't get help" do
+      put :help,
+        id:     game_w_questions.id,
+        letter: game_w_questions.current_game_question.correct_answer_key
+
+      expect(game_w_questions.audience_help_used).to be_falsey
+
+      expect_game_to_be_nil
+      expect_redirect_to_login
     end
   end
 
