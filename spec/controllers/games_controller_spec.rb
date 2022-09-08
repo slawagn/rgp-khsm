@@ -92,4 +92,54 @@ RSpec.describe GamesController, type: :controller do
       expect(response).to redirect_to(game_path(game))
     end
   end
+
+  describe '#show' do
+    context "when trying to see somebody else's game" do
+      it 'redirects to root' do
+        somebody_elses_game = FactoryGirl.create(:game_with_questions)
+
+        sign_in user
+        get :show, id: somebody_elses_game.id
+
+        expect(response.status).not_to eq(200)
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to be
+      end
+    end
+  end
+
+  describe '#take_money' do
+    let(:level) { 2 }
+
+    it 'finishes the game with appropriate prize' do
+      sign_in user
+      game_w_questions.update(current_level: level)
+      put :take_money, id: game_w_questions.id
+
+      game = assigns(:game)
+      expect(game.finished?).to be_truthy
+      expect(game.prize).to eq(Game::PRIZES[level - 1])
+      expect(user.reload.balance).to eq(Game::PRIZES[level - 1])
+      expect(response).to redirect_to user_path(user)
+      expect(flash[:warning]).to be
+    end
+  end
+
+  describe '#create' do
+    context 'when a game in progress already exists' do
+      it 'redirects to an already existing game' do
+        sign_in user
+
+        expect(game_w_questions.finished?).to be_falsey
+
+        expect { post :create }.to change(Game, :count).by(0)
+
+        game = assigns(:game)
+        expect(game).to be_nil
+
+        expect(response).to redirect_to game_path(game_w_questions.id)
+        expect(flash[:alert]).to be
+      end
+    end
+  end
 end
