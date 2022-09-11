@@ -145,19 +145,15 @@ RSpec.describe Game, type: :model do
   end
 
   describe '#answer_current_question!' do
-    def give_incorrect_answer
+    let(:give_incorrect_answer) do
       game_w_questions.answer_current_question!(incorrect_answer_key)
     end
-
-    def give_correct_answer
+    let(:give_correct_answer) do
       game_w_questions.answer_current_question!(correct_answer_key)
     end
 
     let(:incorrect_answer_key) do
-      (
-        current_question.variants.keys -
-        [current_question.correct_answer_key]
-      ).first
+      (current_question.variants.keys - [current_question.correct_answer_key]).first
     end
     let(:correct_answer_key) { current_question.correct_answer_key }
     let(:current_question) { game_w_questions.current_game_question }
@@ -171,38 +167,40 @@ RSpec.describe Game, type: :model do
       end
     end
 
-    context 'when the timeout is reached' do
-      it 'returns false and finishes the game' do
-        game_w_questions.created_at = Time.now - Game::TIME_LIMIT
+    context 'when the correct answer is given' do
+      context 'and the question is a regular one' do
+        it 'increases level by 1' do
+          initial_level = game_w_questions.current_level
 
-        return_value = give_correct_answer
+          give_correct_answer
 
-        expect(return_value).to be_falsey
-        expect(game_w_questions.finished?).to be_truthy
-        expect(game_w_questions.status).to eq(:timeout)
+          expect(game_w_questions.finished?).to be_falsey
+          expect(game_w_questions.previous_level).to eq(initial_level)
+          expect(game_w_questions.status).to eq(:in_progress)
+        end
       end
-    end
 
-    context 'when the last question is answered correctly' do
-      it 'finishes the game as won' do
-        game_w_questions.current_level = Question::QUESTION_LEVELS.max
+      context 'and the question answered was the last one' do
+        it 'finishes the game as won' do
+          game_w_questions.current_level = Question::QUESTION_LEVELS.max
 
-        give_correct_answer
+          give_correct_answer
 
-        expect(game_w_questions.finished?).to be_truthy
-        expect(game_w_questions.status).to eq(:won)
+          expect(game_w_questions.finished?).to be_truthy
+          expect(game_w_questions.status).to eq(:won)
+        end
       end
-    end
 
-    context 'when a question is answered correctly' do
-      it 'increases level by 1' do
-        initial_level = game_w_questions.current_level
+      context 'but the timeout is reached' do
+        it 'returns false and finishes the game' do
+          game_w_questions.created_at = Time.now - Game::TIME_LIMIT
 
-        give_correct_answer
+          return_value = give_correct_answer
 
-        expect(game_w_questions.finished?).to be_falsey
-        expect(game_w_questions.previous_level).to eq(initial_level)
-        expect(game_w_questions.status).to eq(:in_progress)
+          expect(return_value).to be_falsey
+          expect(game_w_questions.finished?).to be_truthy
+          expect(game_w_questions.status).to eq(:timeout)
+        end
       end
     end
   end
