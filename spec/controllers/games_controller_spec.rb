@@ -176,22 +176,52 @@ RSpec.describe GamesController, type: :controller do
       before { sign_in user }
 
       context 'and answering the question for their own game' do
-        before do
-          put :answer, id: game_w_questions.id, letter: game_w_questions.current_game_question.correct_answer_key
-          @game = assigns(:game)
+        context 'and the correct answer is given' do
+          before do
+            put :answer,
+              id:     game_w_questions.id,
+              letter: game_w_questions.current_game_question.correct_answer_key
+            @game = assigns(:game)
+          end
+
+          it 'continues the game' do
+            expect(@game.finished?).to be false
+            expect(@game.current_level).to be > 0
+          end
+
+          it 'redirects to game path' do
+            expect(response).to redirect_to(game_path(@game))
+          end
+
+          it 'does not show flash' do
+            expect(flash.empty?).to be true
+          end
         end
 
-        it 'continues the game' do
-          expect(@game.finished?).to be_falsey
-          expect(@game.current_level).to be > 0
-        end
+        context 'and the incorrect answer is given' do
+          before do
+            put :answer,
+              id:     game_w_questions.id,
+              letter: (
+                game_w_questions.current_game_question.variants.keys -
+                [game_w_questions.current_game_question.correct_answer_key]
+              ).first
 
-        it 'redirects do game path' do
-          expect(response).to redirect_to(game_path(@game))
-        end
+            @game = assigns(:game)
+          end
 
-        it 'does not show flash' do
-          expect(flash.empty?).to be true
+          it 'fails the game' do
+            expect(@game.finished?).to be true
+            expect(@game.status).to be :fail
+          end
+
+          it 'redirects to user path' do
+            expect(response).to redirect_to(user_path(user))
+          end
+
+          it 'shows flash' do
+            expect(flash[:alert]).to be
+          end
         end
       end
     end
