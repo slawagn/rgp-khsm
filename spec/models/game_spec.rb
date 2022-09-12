@@ -151,7 +151,6 @@ RSpec.describe Game, type: :model do
     let(:give_correct_answer) do
       game_w_questions.answer_current_question!(correct_answer_key)
     end
-
     let(:incorrect_answer_key) do
       (current_question.variants.keys - [current_question.correct_answer_key]).first
     end
@@ -195,9 +194,7 @@ RSpec.describe Game, type: :model do
         it 'returns false and finishes the game' do
           game_w_questions.created_at = Time.now - Game::TIME_LIMIT
 
-          return_value = give_correct_answer
-
-          expect(return_value).to be_falsey
+          expect(give_correct_answer).to be_falsey
           expect(game_w_questions.finished?).to be_truthy
           expect(game_w_questions.status).to eq(:timeout)
         end
