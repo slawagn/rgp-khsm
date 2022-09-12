@@ -321,29 +321,58 @@ RSpec.describe GamesController, type: :controller do
       before { sign_in user }
 
       context 'and getting help for their own game' do
-        before do
-          expect(game_w_questions.current_game_question.help_hash[:audience_help]).not_to be
-          expect(game_w_questions.audience_help_used).to be false
+        context 'and using :audience_help' do
+          before do
+            expect(game_w_questions.current_game_question.help_hash[:audience_help]).not_to be
+            expect(game_w_questions.audience_help_used).to be false
 
-          put :help, id: game_w_questions.id, help_type: :audience_help
-          @game = assigns(:game)
+            put :help, id: game_w_questions.id, help_type: :audience_help
+            @game = assigns(:game)
+          end
+
+          it 'does not finish the game' do
+            expect(@game.finished?).to be false
+          end
+
+          it 'marks helper as used' do
+            expect(@game.audience_help_used).to be true
+          end
+
+          it 'sets the help hash' do
+            expect(@game.current_game_question.help_hash[:audience_help]).to be
+            expect(@game.current_game_question.help_hash[:audience_help].keys).to contain_exactly('a', 'b', 'c', 'd')
+          end
+
+          it 'redirects to game path' do
+            expect(response).to redirect_to(game_path(@game))
+          end
         end
 
-        it 'does not finish the game' do
-          expect(@game.finished?).to be false
-        end
+        context 'and using :fifty_fifty' do
+          before do
+            expect(game_w_questions.current_game_question.help_hash[:fifty_fifty]).not_to be
+            expect(game_w_questions.fifty_fifty_used).to be false
 
-        it 'marks help as used' do
-          expect(@game.audience_help_used).to be true
-        end
+            put :help, id: game_w_questions.id, help_type: :fifty_fifty
+            @game = assigns(:game)
+          end
 
-        it 'sets the help hash' do
-          expect(@game.current_game_question.help_hash[:audience_help]).to be
-          expect(@game.current_game_question.help_hash[:audience_help].keys).to contain_exactly('a', 'b', 'c', 'd')
-        end
+          it 'does not finish the game' do
+            expect(@game.finished?).to be false
+          end
 
-        it 'redirects to game path' do
-          expect(response).to redirect_to(game_path(@game))
+          it 'marks helper as used' do
+            expect(@game.fifty_fifty_used).to be true
+          end
+
+          it 'sets the help hash' do
+            expect(@game.current_game_question.help_hash[:fifty_fifty]).to be
+            expect(@game.current_game_question.help_hash[:fifty_fifty]).to include('d')
+          end
+
+          it 'redirects to game path' do
+            expect(response).to redirect_to(game_path(@game))
+          end
         end
       end
     end
