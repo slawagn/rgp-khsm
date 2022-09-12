@@ -8,10 +8,7 @@
     "vscode": {
       "extensions": [
         "rebornix.ruby",
-        "castwide.solargraph",
         "wingrunr21.vscode-ruby",
-        "koichisasada.vscode-rdbg",
-        "misogi.ruby-rubocop"
       ]
     }
   }

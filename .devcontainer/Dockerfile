@@ -1,4 +1,4 @@
-FROM ruby:2.6
+FROM ruby:2.4
 
 RUN apt-get update &&   \
     apt-get install -y  \
@@ -14,8 +14,6 @@ RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 USER code
 
 WORKDIR /workspaces/khsm
-
-RUN gem install debug rubocop solargraph
 
 RUN sudo apt-get install -y  \
       nodejs                 \
