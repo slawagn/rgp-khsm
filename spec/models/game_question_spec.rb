@@ -67,6 +67,21 @@ RSpec.describe GameQuestion, type: :model do
     end
   end
 
+  describe '#add_friend_call' do
+    before do
+      expect(game_question.help_hash).not_to include(:friend_call)
+
+      game_question.add_friend_call
+    end
+
+    it 'adds :fifty_fifty to help_hash' do
+      expect(game_question.help_hash).to include(:friend_call)
+
+      fc = game_question.help_hash[:friend_call]
+      expect(fc).to match /\A*B\Z/
+    end
+  end
+
   describe '#text' do
     it 'is delegated to Question model' do
       expect(game_question.text).to  eq(game_question.question.text)
