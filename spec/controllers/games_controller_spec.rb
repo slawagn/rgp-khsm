@@ -18,14 +18,15 @@ RSpec.describe GamesController, type: :controller do
   let(:game_w_questions) { FactoryGirl.create(:game_with_questions, user: user) }
 
   describe '#create' do
+    let(:game) { assigns(:game) }
+
     context 'when the user is anonymous' do
       before do
         post :create
-        @game = assigns(:game)
       end
 
       it 'does not create a game' do
-        expect(@game).to be_nil
+        expect(game).to be_nil
       end
 
       it 'redirects to login page' do
@@ -46,16 +47,15 @@ RSpec.describe GamesController, type: :controller do
           generate_questions(15)
 
           post :create
-          @game = assigns(:game)
         end
 
         it 'creates a game for current user' do
-          expect(@game.finished?).to be_falsey
-          expect(@game.user).to eq(user)
+          expect(game.finished?).to be_falsey
+          expect(game.user).to eq(user)
         end
 
         it 'redirects to the game page' do
-          expect(response).to redirect_to(game_path(@game))
+          expect(response).to redirect_to(game_path(game))
         end
 
         it 'shows flash' do
@@ -67,11 +67,10 @@ RSpec.describe GamesController, type: :controller do
         before do
           expect(game_w_questions.finished?).to be_falsey
           expect { post :create }.to change(Game, :count).by(0)
-          @game = assigns(:game)
         end
 
         it 'does not create a new game' do
-          expect(@game).to be_nil
+          expect(game).to be_nil
         end
 
         it 'redirects to game path' do
@@ -86,14 +85,15 @@ RSpec.describe GamesController, type: :controller do
   end
 
   describe '#show' do
+    let(:game) { assigns(:game) }
+
     context 'when the user is anonymous' do
       before do
         get :show, id: game_w_questions.id
-        @game = assigns(:game)
       end
 
       it 'does not show a game' do
-        expect(@game).to be_nil
+        expect(game).to be_nil
       end
 
       it 'redirects to login page' do
@@ -112,12 +112,12 @@ RSpec.describe GamesController, type: :controller do
       context 'and trying to see their own game' do
         before do
           get :show, id: game_w_questions.id
-          @game = assigns(:game)
+          game = assigns(:game)
         end
 
         it 'shows a game belonging to current user' do
-          expect(@game.finished?).to be false
-          expect(@game.user).to eq(user)
+          expect(game.finished?).to be false
+          expect(game.user).to eq(user)
         end
 
         it 'responds with OK' do
@@ -149,17 +149,17 @@ RSpec.describe GamesController, type: :controller do
   end
 
   describe '#answer' do
+    let(:game) { assigns(:game) }
+
     context 'when the user is anonymous' do
       before do
         put :answer,
           id:     game_w_questions.id,
           letter: game_w_questions.current_game_question.correct_answer_key
-
-        @game = assigns(:game)
       end
 
       it 'does not set a game' do
-        expect(@game).to be_nil
+        expect(game).to be_nil
       end
 
       it 'redirects to login page' do
@@ -181,16 +181,15 @@ RSpec.describe GamesController, type: :controller do
             put :answer,
               id:     game_w_questions.id,
               letter: game_w_questions.current_game_question.correct_answer_key
-            @game = assigns(:game)
           end
 
           it 'continues the game' do
-            expect(@game.finished?).to be false
-            expect(@game.current_level).to be > 0
+            expect(game.finished?).to be false
+            expect(game.current_level).to be > 0
           end
 
           it 'redirects to game path' do
-            expect(response).to redirect_to(game_path(@game))
+            expect(response).to redirect_to(game_path(game))
           end
 
           it 'does not show flash' do
@@ -206,13 +205,11 @@ RSpec.describe GamesController, type: :controller do
                 game_w_questions.current_game_question.variants.keys -
                 [game_w_questions.current_game_question.correct_answer_key]
               ).first
-
-            @game = assigns(:game)
           end
 
           it 'fails the game' do
-            expect(@game.finished?).to be true
-            expect(@game.status).to be :fail
+            expect(game.finished?).to be true
+            expect(game.status).to be :fail
           end
 
           it 'redirects to user path' do
@@ -228,12 +225,12 @@ RSpec.describe GamesController, type: :controller do
   end
 
   describe '#take_money' do
+    let(:game) { assigns(:game) }
+
     context 'when the user is anonymous' do
       before do
         game_w_questions.update(current_level: 2)
         put :take_money, id: game_w_questions.id
-
-        @game = assigns(:game)
       end
 
       it 'does not finish a game' do
@@ -241,7 +238,7 @@ RSpec.describe GamesController, type: :controller do
       end
 
       it 'does not set a game' do
-        expect(@game).to be_nil
+        expect(game).to be_nil
       end
 
       it 'redirects to login page' do
@@ -263,19 +260,18 @@ RSpec.describe GamesController, type: :controller do
         before do
           game_w_questions.update(current_level: level)
           put :take_money, id: game_w_questions.id
-          @game = assigns(:game)
         end
 
         it 'finishes the game' do
-          expect(@game.finished?).to be true
+          expect(game.finished?).to be true
         end
 
         it 'sets the game prize' do
-          expect(@game.prize).to eq(Game::PRIZES[level - 1])
+          expect(game.prize).to eq(Game::PRIZES[level - 1])
         end
 
         it 'increases user balance by the prize amount' do
-          expect(user.reload.balance).to eq(@game.prize)
+          expect(user.reload.balance).to eq(game.prize)
         end
 
         it 'redirects to user path' do
@@ -290,13 +286,13 @@ RSpec.describe GamesController, type: :controller do
   end
 
   describe '#help' do
+    let(:game) { assigns(:game) }
+
     context 'when the user is anonymous' do
       before do
         put :help,
           id:     game_w_questions.id,
           letter: game_w_questions.current_game_question.correct_answer_key
-
-        @game = assigns(:game)
       end
 
       it 'does not use help' do
@@ -304,7 +300,7 @@ RSpec.describe GamesController, type: :controller do
       end
 
       it 'does not set a game' do
-        expect(@game).to be_nil
+        expect(game).to be_nil
       end
 
       it 'redirects to login page' do
@@ -327,24 +323,23 @@ RSpec.describe GamesController, type: :controller do
             expect(game_w_questions.audience_help_used).to be false
 
             put :help, id: game_w_questions.id, help_type: :audience_help
-            @game = assigns(:game)
           end
 
           it 'does not finish the game' do
-            expect(@game.finished?).to be false
+            expect(game.finished?).to be false
           end
 
           it 'marks helper as used' do
-            expect(@game.audience_help_used).to be true
+            expect(game.audience_help_used).to be true
           end
 
           it 'sets the help hash' do
-            expect(@game.current_game_question.help_hash[:audience_help]).to be
-            expect(@game.current_game_question.help_hash[:audience_help].keys).to contain_exactly('a', 'b', 'c', 'd')
+            expect(game.current_game_question.help_hash[:audience_help]).to be
+            expect(game.current_game_question.help_hash[:audience_help].keys).to contain_exactly('a', 'b', 'c', 'd')
           end
 
           it 'redirects to game path' do
-            expect(response).to redirect_to(game_path(@game))
+            expect(response).to redirect_to(game_path(game))
           end
         end
 
@@ -354,24 +349,23 @@ RSpec.describe GamesController, type: :controller do
             expect(game_w_questions.fifty_fifty_used).to be false
 
             put :help, id: game_w_questions.id, help_type: :fifty_fifty
-            @game = assigns(:game)
           end
 
           it 'does not finish the game' do
-            expect(@game.finished?).to be false
+            expect(game.finished?).to be false
           end
 
           it 'marks helper as used' do
-            expect(@game.fifty_fifty_used).to be true
+            expect(game.fifty_fifty_used).to be true
           end
 
           it 'sets the help hash' do
-            expect(@game.current_game_question.help_hash[:fifty_fifty]).to be
-            expect(@game.current_game_question.help_hash[:fifty_fifty]).to include('d')
+            expect(game.current_game_question.help_hash[:fifty_fifty]).to be
+            expect(game.current_game_question.help_hash[:fifty_fifty]).to include('d')
           end
 
           it 'redirects to game path' do
-            expect(response).to redirect_to(game_path(@game))
+            expect(response).to redirect_to(game_path(game))
           end
         end
       end
